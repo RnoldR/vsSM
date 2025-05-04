@@ -1,0 +1,6 @@
+Name;Char
+Susceptible;"X"
+Infected;"I"
+Contagious;"Y"
+Immune;"Z"
+Dead;"M"
