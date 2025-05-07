@@ -1,1 +1,8 @@
-resource_path: '/media/i-files/home/arnold/development/python/vsSM'
+screen_width: 1000
+screen_height: 1000
+rows: 100
+cols: 100
+icon_style: 1
+epochs: 400
+states:
+  X: "*"

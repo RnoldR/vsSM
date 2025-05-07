@@ -321,24 +321,12 @@ class GridMatrix(Grid):
 
         else:
             print('*** Implement save_grid function ***')
-            # np.save(file_path, self.grid_cells, allow_pickle=False, fix_imports=True)
+            # np.save(file_path, self.gprint(rid_cells, allow_pickle=False, fix_imports=True)
             return True
 
         # if
 
-    ### save_grid ###
-
-
-    @classmethod
-    def load_grid(cls, file_path: str):
-        """ Loads the Grid from file.
-
-        Args:
-            file_path (str): Name of file to read Grid from
-
-        Returns:
-            bool: True if load succeeded, else False
-        """
+    ### save_grid ###print(
         if not isinstance(file_path, str):
             logging.critical("Invalid file_path. It must be a string: " + file_path)
             return None
