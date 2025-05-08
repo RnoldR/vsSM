@@ -132,7 +132,7 @@ class InfectiousDiseaseModel(object):
         image_dir = os.path.join(self.result_dir, 'images')
         while grid.ticks <= self.epochs:
             save_file = os.path.join(image_dir, f'model_run_{grid.ticks:04d}.png')
-            pygame.image.save(grid_viewer.grid_layer, save_file)
+            pygame.image.save(grid_viewer.screen, save_file)
 
             grid_viewer.update_screen()
             grid.next_turn()
