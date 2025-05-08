@@ -14,7 +14,7 @@ import pandas as pd
 from grid import Grid
 
 from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
-    COL_CHAR, COL_DATA, COL_ICON
+    COL_CHAR, COL_DATA, COL_ICON, COL_COLOR
 
 # Initialize Pandas display options such that the whole DataFrame is printed
 pd.options.display.max_rows = 999999
@@ -74,17 +74,15 @@ class GridViewMatrix(GridView2D):
         ): 
         super().__init__(grid, definitions, title)     
 
+        # print(definitions)
         # transform the images to the new cell size
         for idx in self.definitions.index:
             img = self.definitions.loc[idx, COL_ICON].copy()
-            self.definitions.loc[idx, COL_ICON] = pygame \
-                .transform.scale(img, (self.CELL_W, self.CELL_H)).convert_alpha()
-        
-        # transform the images to the new cell size
-        for idx in self.definitions.index:
-            img = self.definitions.loc[idx, COL_ICON].copy()
-            self.definitions.loc[idx, COL_ICON] = pygame \
-                .transform.scale(img, (self.CELL_W, self.CELL_H)).convert_alpha()
+            new_img = pygame.transform.scale(img, (self.CELL_W, self.CELL_H)).convert_alpha()
+            kleur = new_img.get_at((1, 1))
+            # print(type(color))
+            self.definitions.loc[idx, COL_ICON] = new_img
+            self.definitions.at[idx, COL_COLOR] = kleur
         
         # create a background
         self.background = self.create_background()
@@ -92,8 +90,9 @@ class GridViewMatrix(GridView2D):
         # show all things
         self.__draw_things()
 
+        # print(definitions)
         # set a caption
-        caption: str = f'Infectious Disease Spread Model - {self.grid.rows} x {self.grid.cols}'
+        caption: str = f'Infectious Disease Model - {self.grid.rows} x {self.grid.cols}'
         pygame.display.set_caption(caption)
 
         return

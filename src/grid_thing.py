@@ -15,7 +15,7 @@ from math import sqrt
 from grid import Grid
 
 from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
-    COL_CHAR, COL_DATA, COL_ICON
+    COL_CHAR, COL_DATA, COL_ICON, COL_COLOR
 
 # forward declaration
 class Thing: pass
@@ -69,6 +69,10 @@ class Thing():
             index_col = COL_NAME,
         )
 
+        # Add columns for Icon and Color
+        definitions[COL_ICON] = None
+        definitions[COL_COLOR] = None
+
         # next load icon info from images is resource path
         for key in definitions.index:
             filename = key.lower() + '-' + str(style) + '.png'
@@ -77,12 +81,12 @@ class Thing():
             
             definitions.loc[key, 'Icon'] = pygame.image.load(filename)
 
+            # Extract color from icon
+            # img = definitions.loc[key, COL_ICON].copy()
+
         # for
 
         Thing.definitions = definitions
-
-        logger.info(str(definitions))
-
 
         return
     

@@ -15,7 +15,7 @@ pd.options.display.max_columns = 999999
 # Constants
 
 if __name__ == "__main__":
-    # random.seed(42)
+    random.seed(42)
 
     res_path = '/media/i-files/home/arnold/development/python/vsSM'
 
