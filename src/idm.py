@@ -30,13 +30,14 @@ class InfectiousDiseaseModel(object):
             config = yaml.safe_load(infile)
 
         self.res_path = res_path
-        self.screen_width = config['screen_width']
-        self.screen_height = config['screen_height']
-        self.rows = config['rows']
-        self.cols = config['cols']
-        self.icon_style = config['icon_style']
-        self.epochs = config['epochs']
-        self.states = config['states']
+        self.screen_width = config['screen']['screen_width']
+        self.screen_height = config['screen']['screen_height']
+        self.rows = config['model']['rows']
+        self.cols = config['model']['cols']
+        self.icon_style = config['model']['icon_style']
+        self.epochs = config['model']['epochs']
+        self.states = config['model']['states']
+        self.infection_config = config['infection']
 
         # read Thing definition file
         Thing.set_definitions(res_path, self.icon_style)
@@ -55,7 +56,7 @@ class InfectiousDiseaseModel(object):
 
     def generator_function(self, location: tuple, grid: object):
 
-        person = Person(location, grid)
+        person = Person(location, grid, self.infection_config)
 
         for state, locations in self.states.items():
             if locations == '*':

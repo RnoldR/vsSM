@@ -15,12 +15,12 @@ from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
 from lib_vsfsm import vsFSM
 
 # Infection pareameters in days
-INCUBATION_TIME = 1
-INFECTION_DURATION = 21
-IMMUNITY = 365
-RHO = 0.1 # virulence
-PM = 0.02 / INFECTION_DURATION
-PZ = 1 - PM
+# infected_time = 1
+# contagious_time = 21
+# immunity_time = 365
+# rho = 0.1 # virulence
+# pm = 0.02 / contagious_time
+# pz = 1 - pm
 
 
 def prob(nb: int, prb: float):
@@ -37,7 +37,7 @@ def prob(nb: int, prb: float):
 
 
 class Person(Thing):
-    def __init__(self, location: tuple, grid: Grid):
+    def __init__(self, location: tuple, grid: Grid, config: dict):
         super().__init__(location, grid)
 
         self.name = "Person"
@@ -49,6 +49,15 @@ class Person(Thing):
         self.data: str = ''
         self.icons: object = ''
 
+        # infection parameters
+        infected_time = config['infected_time']
+        contagious_time = config['contagious_time']
+        immunity_time = config['immunity_time']
+        rho = config['rho']
+        pm = config['p_mortality'] / contagious_time
+        pz = 1 - pm
+
+
         # Create state machine and add states
         self.fsm = vsFSM()
         self.states = []
@@ -57,18 +66,18 @@ class Person(Thing):
         self.fsm.add_states(self.states)
 
         # For each state add transitions
-        self.fsm.add_transition('X', lambda inputs: prob(inputs['Neighbours']['Y'], RHO), 'I')
+        self.fsm.add_transition('X', lambda inputs: prob(inputs['Neighbours']['Y'], rho), 'I')
         self.fsm.add_transition('X', lambda inputs: inputs['Neighbours']['Y'] == 0, 'X')
         
-        self.fsm.add_transition('I', lambda inputs: grid.ticks - inputs['Ticker'] < INCUBATION_TIME-1, 'I')
-        self.fsm.add_transition('I', lambda inputs: grid.ticks - inputs['Ticker'] >= INCUBATION_TIME-1, 'Y')
+        self.fsm.add_transition('I', lambda inputs: grid.ticks - inputs['Ticker'] < infected_time-1, 'I')
+        self.fsm.add_transition('I', lambda inputs: grid.ticks - inputs['Ticker'] >= infected_time-1, 'Y')
 
-        self.fsm.add_transition('Y', lambda inputs: prob(1, PM), 'M')
-        self.fsm.add_transition('Y', lambda inputs: grid.ticks - inputs['Ticker'] >= INFECTION_DURATION-1, 'Z')
-        self.fsm.add_transition('Y', lambda inputs: grid.ticks - inputs['Ticker'] < INFECTION_DURATION-1, 'Y')
+        self.fsm.add_transition('Y', lambda inputs: prob(1, pm), 'M')
+        self.fsm.add_transition('Y', lambda inputs: grid.ticks - inputs['Ticker'] >= contagious_time-1, 'Z')
+        self.fsm.add_transition('Y', lambda inputs: grid.ticks - inputs['Ticker'] < contagious_time-1, 'Y')
 
-        self.fsm.add_transition('Z', lambda inputs: grid.ticks - inputs['Ticker'] < IMMUNITY-1, 'Z')
-        self.fsm.add_transition('Z', lambda inputs: grid.ticks - inputs['Ticker'] >= IMMUNITY-1, 'X')
+        self.fsm.add_transition('Z', lambda inputs: grid.ticks - inputs['Ticker'] < immunity_time-1, 'Z')
+        self.fsm.add_transition('Z', lambda inputs: grid.ticks - inputs['Ticker'] >= immunity_time-1, 'X')
 
         self.fsm.add_transition('M', lambda inputs: True, 'M')
 

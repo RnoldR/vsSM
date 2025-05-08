@@ -16,7 +16,7 @@ from grid import Grid, GridMatrix, GridObjects
 # from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
 #     COL_CHAR, COL_DATA, COL_ICON
 
-# Initialize Pandas  display options such that the whole DataFrame is printed
+# Initialize Pandas display options such that the whole DataFrame is printed
 pd.options.display.max_rows = 999999
 pd.options.display.max_columns = 999999
 

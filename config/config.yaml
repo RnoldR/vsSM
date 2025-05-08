@@ -1,8 +1,18 @@
-screen_width: 1000
-screen_height: 1000
-rows: 100
-cols: 100
-icon_style: 1
-epochs: 400
-states:
-  X: "*"
+screen:
+  screen_width: 1000
+  screen_height: 1000
+
+model:
+  rows: 100
+  cols: 100
+  icon_style: 1
+  epochs: 400
+  states:
+    X: "*"
+
+infection:
+  infected_time: 1
+  contagious_time: 21
+  immunity_time: 365
+  rho: 0.1
+  p_mortality: 0.02
