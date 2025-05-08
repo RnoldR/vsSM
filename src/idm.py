@@ -8,6 +8,8 @@ import yaml
 import pygame
 import pandas as pd
 import matplotlib.pyplot as plt
+import moviepy.video.io.ImageSequenceClip
+
 from datetime import datetime
 
 from grid_viewer import GridViewMatrix
@@ -43,7 +45,7 @@ class InfectiousDiseaseModel(object):
         now = datetime.now()
         now = now.strftime("%Y-%m-%d %H:%M:%S").replace(' ', '_')
         self.result_dir = os.path.join(res_path, 'results', now)
-        os.mkdir(self.result_dir)
+        os.makedirs(os.path.join(self.result_dir, 'images'))
         print('Results will be written to', self.result_dir)
 
         return
@@ -84,6 +86,20 @@ class InfectiousDiseaseModel(object):
     ### initial_seed ###
 
 
+    def generate_movie(self, image_dir, video_file, fps = 25):
+        image_files = [os.path.join(image_dir, img)
+                    for img in os.listdir(image_dir)
+                    if img.endswith(".png")]
+        image_files.sort()
+
+        clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps = fps)
+        clip.write_videofile(video_file, codec = 'png')
+
+        return
+    
+    ### generate_movie ###
+
+
     def run_simple_epidemic(self):
 
         # Create a grid generator
@@ -109,20 +125,27 @@ class InfectiousDiseaseModel(object):
         
         grid_viewer.update_screen()
 
+        image_dir = os.path.join(self.result_dir, 'images')
         while grid.ticks <= self.epochs:
-            # print(f'Turn: {grid.ticks}')
-            if grid.ticks % 100 == 0:
-                save_file = os.path.join(self.result_dir, f'model_run_{grid.ticks}.png')
-                pygame.image.save(grid_viewer.grid_layer, save_file)
+            save_file = os.path.join(image_dir, f'model_run_{grid.ticks:04d}.png')
+            pygame.image.save(grid_viewer.grid_layer, save_file)
 
             grid_viewer.update_screen()
             grid.next_turn()
 
         # while
 
+        # save all snapshots to file
         grid.recorder.to_csv(os.path.join(self.result_dir, 'model_output.csv'), sep=';')
         
+        # create a movie from the saved images
+        movie_file = os.path.join(self.result_dir, 'model-epidemic.avi')
+        self.generate_movie(image_dir, movie_file)
+
+        # plot the snapshots
         self.plot(grid.recorder)
+
+        # time.sleep(1)
 
         # input('Press <enter> to quit')
         pygame.quit()
@@ -133,7 +156,7 @@ class InfectiousDiseaseModel(object):
 
 
     def plot(self, df: pd.DataFrame):  
-        plt.figure()
+        # plt.figure()
         df.plot()
         plt.xlabel('t (days)')
         plt.ylabel('Numbere of persons')
