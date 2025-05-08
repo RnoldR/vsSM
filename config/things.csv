@@ -1,6 +1,6 @@
-Name;Description;Category;Char;Data;Icon
-"X";Susceptible;1;"X";;
-"I";Infected;2;"I";;
-"Y";Contagious;3;"Y";;
-"Z";Immune;4;"Z";;
-"M";Dead;5;"M";;
+Name;Description;Category;Char;Data
+"X";Susceptible;1;"X";
+"I";Infected;2;"I";
+"Y";Contagious;3;"Y";
+"Z";Immune;4;"Z";
+"M";Dead;5;"M";

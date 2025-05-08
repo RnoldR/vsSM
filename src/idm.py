@@ -17,6 +17,9 @@ from grid_generators import GridMatrixGenerator
 from grid_thing import Thing
 from grid_objects import Person
 
+from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
+    COL_CHAR, COL_DATA, COL_ICON, COL_COLOR
+
 # Initialize Pandas  display options such that the whole DataFrame is printed
 pd.options.display.max_rows = 999999
 pd.options.display.max_columns = 999999
@@ -144,9 +147,7 @@ class InfectiousDiseaseModel(object):
         self.generate_movie(image_dir, movie_file)
 
         # plot the snapshots
-        self.plot(grid.recorder)
-
-        # time.sleep(1)
+        self.plot(grid.recorder, grid_viewer.definitions)
 
         # input('Press <enter> to quit')
         pygame.quit()
@@ -156,9 +157,10 @@ class InfectiousDiseaseModel(object):
     ### test_move_around ###
 
 
-    def plot(self, df: pd.DataFrame):  
+    def plot(self, df: pd.DataFrame, definitions: pd.DataFrame):  
         # plt.figure()
-        df.plot()
+        colors = [(x[0]/255, x[1]/255, x[2]/255) for x in definitions[COL_COLOR]]
+        df.plot(color = colors)
         plt.xlabel('t (days)')
         plt.ylabel('Numbere of persons')
         plt.title('Infectious Disease Model Run')
