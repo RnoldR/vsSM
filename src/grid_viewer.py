@@ -74,15 +74,17 @@ class GridViewMatrix(GridView2D):
         ): 
         super().__init__(grid, definitions, title)     
 
-        # print(definitions)
         # transform the images to the new cell size
         for idx in self.definitions.index:
             img = self.definitions.loc[idx, COL_ICON].copy()
             new_img = pygame.transform.scale(img, (self.CELL_W, self.CELL_H)).convert_alpha()
+
+            # add color of icon to definitions
             kleur = new_img.get_at((1, 1))
-            # print(type(color))
             self.definitions.loc[idx, COL_ICON] = new_img
             self.definitions.at[idx, COL_COLOR] = kleur
+
+        # for
         
         # create a background
         self.background = self.create_background()
@@ -198,29 +200,65 @@ class GridViewMatrix(GridView2D):
     ### blit_text ###
 
 
-    def show_status(self, mess: str):
-        # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
-        myfont = pygame.font.SysFont("sans", 18)
+    def blit_dict(self, surface, dict, pos, font, color=pygame.Color('black')):
+        # 2D array where each row is a list of words.
+        # The width of a space.
+        space = font.size(' ')
 
+        panel_width, panel_height = surface.get_size()
+        x, y = pos
+        max_height = 0
+        max_width = 0
+        for key, value in dict.items():
+            omvang = font.size(key)
+            if omvang[0] > max_width: max_width = omvang[0]
+            if omvang[1] > max_height: max_height = omvang[1]
+
+        x1 = int(x + max_width + 0.1 * max_width)
+        y1 = int(y + max_height + 0.1 * max_height)
+        for key, value in dict.items():
+            word_surface = font.render(key, 0, color)
+            surface.blit(word_surface, (x, y1))
+
+
+            word_surface = font.render(f'{value:5d}', 0, color)
+            surface.blit(word_surface, (x1, y1))
+
+            y1 += max_height
+            
+        return
+
+    ### blit_dict ###
+
+
+    def show_status(self, mess: str, table: dict):
         # fill surface with white
         self.interface.fill((255, 255, 255))
 
-        # show the text
-        self.blit_text(self.interface, mess, (5, 5), myfont)
+        # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
+        font1 = pygame.font.SysFont("DejaVu Sans", 24, bold = True)
+        font2 = pygame.font.SysFont("DejaVu Sans Mono", 24, bold = True)
 
+        # show the text
+        self.blit_text(self.interface, mess, (5, 5), font = font1)
+        self.blit_dict(self.interface, table, (5, 100), font = font2)
+
+        return
+    
     ### show_status ###
 
 
     def count_states(self) -> dict:
         thing = self.grid.matrix[0, 0]
-        states = {'Population': 0}
+        # states = {'Population': 0}
+        states = {}
         for state in thing.definitions.index:
             states[state] = 0
 
         for row in range(self.grid.rows):
             for col in range(self.grid.cols):
                 if self.grid.matrix[row, col] is not None:
-                    states['Population'] += 1
+                    # states['Population'] += 1
                     state = self.grid.matrix[row, col].get_state()
                     states[state] += 1
                 # if
@@ -243,22 +281,11 @@ class GridViewMatrix(GridView2D):
         """
         
         counts = self.count_states()
-        text = f'Turn: {self.grid.ticks}\n----------\n\n'
-        for key, value in counts.items():
-            text += f'{key:10s}: {value} \n\n'
+        text = f'Day: {self.grid.ticks}\n___________________________________\n\n'
+        # for key, value in counts.items():
+        #     text += f'{key:10s}: {value} \n'
 
-        # text += f'Vehicle {vehicle.id}\n\n'
-        # text += f'  Location ({vehicle.location[0]}, '
-        # text += f'{vehicle.location[1]})\n'
-        # text += f'  Mass: {vehicle.mass:.2f}\n'
-
-        self.show_status(text)
-        # caption = 'Turn: {:d} Mass {:.2f} - {:s}'.format(self.grid.ticks,
-        #                 vehicle.mass, str(vehicle.location))
-                        
-        # pygame.display.set_caption(caption)
-        # logger.debug ('')
-        # logger.debug('*** ' + caption)
+        self.show_status(text, counts)
 
         try:
             if not self.game_over:
