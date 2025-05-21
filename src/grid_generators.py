@@ -9,7 +9,6 @@ import random
 import numpy as np
 import pandas as pd
 
-from grid_objects import Person
 from grid_viewer import GridViewObject
 from grid import Grid, GridMatrix, GridObjects
 

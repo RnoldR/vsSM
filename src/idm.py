@@ -20,10 +20,6 @@ from grid_objects import Person
 from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
     COL_CHAR, COL_DATA, COL_ICON, COL_COLOR
 
-# Initialize Pandas  display options such that the whole DataFrame is printed
-pd.options.display.max_rows = 999999
-pd.options.display.max_columns = 999999
-
 
 class InfectiousDiseaseModel(object):
     def __init__(self, res_path: str):
@@ -32,18 +28,24 @@ class InfectiousDiseaseModel(object):
         with open(os.path.join(res_path, 'config', 'config.yaml')) as infile:
             config = yaml.safe_load(infile)
 
+        self.config_screen = config['Screen']
+        self.config_pop = config['Population']
+        self.config_model = config['Model']
+
         self.res_path = res_path
-        self.screen_width = config['screen']['screen_width']
-        self.screen_height = config['screen']['screen_height']
-        self.rows = config['model']['rows']
-        self.cols = config['model']['cols']
-        self.icon_style = config['model']['icon_style']
-        self.epochs = config['model']['epochs']
-        self.states = config['model']['states']
-        self.infection_config = config['infection']
+        self.screen_width = self.config_screen['screen_width']
+        self.screen_height = self.config_screen['screen_height']
+        self.rows = self.config_screen['rows']
+        self.cols = self.config_screen['cols']
+        self.icon_style = self.config_screen['icon_style']
+        self.epochs = self.config_screen['epochs']
+        # self.states = self.config_screen['states']
+        # self.infection_config = config['infection']
+        
 
         # read Thing definition file
-        Thing.set_definitions(res_path, self.icon_style)
+        Thing.set_definitions(res_path, self.icon_style)    @staticmethod
+
 
         # create directory to save results to
         now = datetime.now()
@@ -77,6 +79,38 @@ class InfectiousDiseaseModel(object):
     ### generator_function ###
 
 
+    @staticmethod
+    def q(p: float, n: int) -> float:
+        """ Defines recurrent probability after n occurrences
+
+        Args:
+            p (float): probability
+            n (int): number of occurrences
+
+        Returns:
+            float: probability after n occurrences
+        """
+
+        return 1 - (1 - p) ** n
+
+
+    @staticmethod
+    def p(q: float, n: int) -> float:
+        """ Returns probability when recurrent probability is known.
+
+            Inverse of p().
+
+        Args:
+            q (float): recurrent probability
+            n (int): number of occurrences
+
+        Returns:
+            float: single probability
+        """
+
+        return (1 - (1 - q) ** (1 / n))
+
+
     def initial_seed(self, grid: object, state: str):
         mid_row = int(self.rows / 2)
         mid_col = int(self.cols / 2)
@@ -105,7 +139,17 @@ class InfectiousDiseaseModel(object):
 
 
     def run_simple_epidemic(self):
+        """ Create population and runs a simple epidemic
+        """
 
+        # Define parameters. Model parameters are stored in seld.config_model
+        # compute probability of getting disease and store in qr0
+        r0 = self.model_config['r0']
+        di = self.modfel_config['di'] # days infected
+        self.model_config['qr0'] = InfectiousDiseaseModel(1 - 1 / r0, di)
+
+        
+        
         # Create a grid generator
         generator = GridMatrixGenerator()
 
@@ -136,7 +180,7 @@ class InfectiousDiseaseModel(object):
 
             grid_viewer.update_screen()
             grid.next_turn()
-
+grid
         # while
 
         # save all snapshots to file
