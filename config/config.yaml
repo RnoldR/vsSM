@@ -4,20 +4,67 @@ Screen:
   rows: 100 # Rows and cols of matrix
   cols: 100
   icon_style: 1 # Which style of icons to use
-  epochs: 400 # number of days to run the simulation
+  epochs: 365 # number of days to run the simulation
 
+# Real population figures are used to compute some parameters in the model
+# like natural death, birth and so on. 
+# Model specifications are used to override the real population figures
+# when necessary
 Population:
-  size: Model # Population sizew equals matrix size
+  real: # 2024
+    population_size: 18_045_683 # december 2024 (CBS)
+    natural_death: 172_051 # total 2024 (CBS)
+    disease_death: 0 # zero means not modeled
+    population_birth: 167_504 # total 2024 (CBS)
+
+  model:
+    population_size: Model # Population size equals matrix size
   
 Infectionmodel:
-  states: ['S', 'E', 'I', 'R', 'D', 'M']
+  states: 
+    - 'S'  # Suceptible
+    - 'E'  # Infected but no symptoms
+    - 'I'  # Infectious
+    - 'R'  # Recovered and immune
+    - 'M'  # Maternal anti-bodies
+    - 'Dn' # Dead by natural causes
+    - 'Dd' # Dead because of disease
+    - 'Dc' # Cormortality: dead because of underlying conditions (comorbidity)
+
+  # Initialize cells to states: * means all cells
   initialization:
       S: "*"
+
+  # Random seed
   seed: 42
-  a: 0 # birth probability
-  b: 0.0011 # yearly mortality probability
-  alfa: 0.02 # yearly mortality probability due to illness
-  r0: 10 # number of people infected by one peson during illness
-  de: 5 # number of days being infectious without symptoms
-  di: 20 # number of days being ill
-  dr: 400 # number of days the immunity lasts
+
+  # probability for birth: applies to each state of the model
+  # Each birth receives state M = Maternal anti-bodies
+  a: 0
+
+  # b is natural death, is same for each state of the model
+  # < 0 = compute from Population['real']
+  # >= 0 = use this value
+  b: -1
+
+  # alfa is yearly mortality probability due to illness, only applies to state I
+  alfa: 0.02
+
+  # c = comortality = p;robablity on dead because of undelying conditions
+  # also called comorbidity, e.g. heart disease, diabetes
+  # Applies only to state I(nfected)
+  c: 0.01
+
+  # number of people infected by one person during illness
+  r0: 10
+
+  # number of days being infectious without symptoms (E)
+  de: 5 
+
+  # number of days being ill (I)
+  # The probability to die for the disease, alfa, only applies to state I,
+  # not state E
+  di: 20
+
+  # number of days the immunity lasts
+  dr: 400

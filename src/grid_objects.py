@@ -4,7 +4,6 @@ logger = logging.getLogger()
 
 import random
 import numpy as np
-import pandas as pd
 
 from grid import Grid
 from grid_thing import Thing
@@ -55,7 +54,10 @@ class Person(Thing):
         days_recovered = config['dr']
         beta = config['beta'] # Probability to get infected per day
 
-        alfa = config['pm']
+        # Different causes of death
+        b = config['b'] # Probability to die from natural causes
+        alfa = config['pd'] # Death by disease
+        pc = config['pc'] # Death by comorbidity
 
         # Create state machine and add states
         self.fsm = vsFSM()
@@ -65,20 +67,27 @@ class Person(Thing):
         self.fsm.add_states(self.states)
 
         # For each state add transitions
+        self.fsm.add_transition('S', lambda inputs: prob(1, b), 'Dn')
         self.fsm.add_transition('S', lambda inputs: prob(inputs['Neighbours']['I'], beta), 'E')
         self.fsm.add_transition('S', lambda inputs: inputs['Neighbours']['I'] == 0, 'S')
         
+        self.fsm.add_transition('E', lambda inputs: prob(1, b), 'Dn')
         self.fsm.add_transition('E', lambda inputs: grid.ticks - inputs['Ticker'] < days_exposure-1, 'E')
         self.fsm.add_transition('E', lambda inputs: grid.ticks - inputs['Ticker'] >= days_exposure-1, 'I')
 
-        self.fsm.add_transition('I', lambda inputs: prob(1, alfa), 'D')
+        self.fsm.add_transition('I', lambda inputs: prob(1, b), 'Dn')
+        self.fsm.add_transition('I', lambda inputs: prob(1, alfa), 'Dd')
+        self.fsm.add_transition('I', lambda inputs: prob(1, pc), 'Dc')
         self.fsm.add_transition('I', lambda inputs: grid.ticks - inputs['Ticker'] < days_infection-1, 'I')
         self.fsm.add_transition('I', lambda inputs: grid.ticks - inputs['Ticker'] >= days_infection-1, 'R')
 
+        self.fsm.add_transition('R', lambda inputs: prob(1, b), 'Dn')
         self.fsm.add_transition('R', lambda inputs: grid.ticks - inputs['Ticker'] < days_recovered-1, 'R')
         self.fsm.add_transition('R', lambda inputs: grid.ticks - inputs['Ticker'] >= days_recovered-1, 'S')
 
-        self.fsm.add_transition('D', lambda inputs: True, 'D')
+        self.fsm.add_transition('Dn', lambda inputs: True, 'Dn')
+        self.fsm.add_transition('Dc', lambda inputs: True, 'Dc')
+        self.fsm.add_transition('Dd', lambda inputs: True, 'Dd')
 
         # Add input values
         self.fsm.set_input('Row', self.row)
