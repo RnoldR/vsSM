@@ -9,7 +9,6 @@ import random
 import numpy as np
 import pandas as pd
 
-from grid_objects import Person
 from grid_viewer import GridViewObject
 from grid import Grid, GridMatrix, GridObjects
 
@@ -34,6 +33,7 @@ class GridGenerator(object):
 
 class GridMatrixGenerator(GridGenerator):
     def __init__(self):
+        super().__init__()
 
         return
 
@@ -45,6 +45,7 @@ class GridMatrixGenerator(GridGenerator):
             grid_size = (8,12), 
             res_path: str = '', 
             icon_style: int = 1,
+            config = None,
             verbose: int = 1,
             generator_function = None
         ):
@@ -54,7 +55,7 @@ class GridMatrixGenerator(GridGenerator):
 
         for row in range(grid.rows):
             for col in range(grid.cols):
-                thing = generator_function((row, col), grid)
+                thing = generator_function((row, col), grid, config)
                 grid.insert_thing(thing, (row, col))
         
         return grid
@@ -67,7 +68,11 @@ class GridMatrixGenerator(GridGenerator):
 class GribObjectGenerator(GridGenerator):
 
     def __init__(self):
+        super().__init__()
+
         return
+    
+    ### __init __ ###
     
 
     def generate(

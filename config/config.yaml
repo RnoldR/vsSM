@@ -1,18 +1,23 @@
-screen:
+Screen:
   screen_width: 1000
   screen_height: 1000
-
-model:
-  rows: 100
+  rows: 100 # Rows and cols of matrix
   cols: 100
-  icon_style: 1
-  epochs: 400
-  states:
-    X: "*"
+  icon_style: 1 # Which style of icons to use
+  epochs: 400 # number of days to run the simulation
 
-infection:
-  infected_time: 1
-  contagious_time: 21
-  immunity_time: 365
-  rho: 0.1
-  p_mortality: 0.02
+Population:
+  size: Model # Population sizew equals matrix size
+  
+Infectionmodel:
+  states: ['S', 'E', 'I', 'R', 'D', 'M']
+  initialization:
+      S: "*"
+  seed: 42
+  a: 0 # birth probability
+  b: 0.0011 # yearly mortality probability
+  alfa: 0.02 # yearly mortality probability due to illness
+  r0: 10 # number of people infected by one peson during illness
+  de: 5 # number of days being infectious without symptoms
+  di: 20 # number of days being ill
+  dr: 400 # number of days the immunity lasts

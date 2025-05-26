@@ -20,10 +20,6 @@ from grid_objects import Person
 from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
     COL_CHAR, COL_DATA, COL_ICON, COL_COLOR
 
-# Initialize Pandas  display options such that the whole DataFrame is printed
-pd.options.display.max_rows = 999999
-pd.options.display.max_columns = 999999
-
 
 class InfectiousDiseaseModel(object):
     def __init__(self, res_path: str):
@@ -32,18 +28,23 @@ class InfectiousDiseaseModel(object):
         with open(os.path.join(res_path, 'config', 'config.yaml')) as infile:
             config = yaml.safe_load(infile)
 
+        self.config_screen = config['Screen']
+        self.config_pop = config['Population']
+        self.config_model = config['Infectionmodel']
+
         self.res_path = res_path
-        self.screen_width = config['screen']['screen_width']
-        self.screen_height = config['screen']['screen_height']
-        self.rows = config['model']['rows']
-        self.cols = config['model']['cols']
-        self.icon_style = config['model']['icon_style']
-        self.epochs = config['model']['epochs']
-        self.states = config['model']['states']
-        self.infection_config = config['infection']
+        self.screen_width = self.config_screen['screen_width']
+        self.screen_height = self.config_screen['screen_height']
+        self.rows = self.config_screen['rows']
+        self.cols = self.config_screen['cols']
+        self.icon_style = self.config_screen['icon_style']
+        self.epochs = self.config_screen['epochs']
+
+        self.initializations = self.config_model['initialization']
+        # self.states = self.config_model['states']
 
         # read Thing definition file
-        Thing.set_definitions(res_path, self.icon_style)
+        Thing.set_definitions(res_path, self.icon_style)  
 
         # create directory to save results to
         now = datetime.now()
@@ -57,19 +58,49 @@ class InfectiousDiseaseModel(object):
     ### __init__###
 
 
-    def generator_function(self, location: tuple, grid: object):
+    @staticmethod
+    def q(p: float, n: int) -> float:
+        """ Defines recurrent probability after n occurrences
 
-        person = Person(location, grid, self.infection_config)
+        Args:
+            p (float): probability
+            n (int): number of occurrences
 
-        for state, locations in self.states.items():
+        Returns:
+            float: probability after n occurrences
+        """
+
+        return 1 - (1 - p) ** n
+
+
+    @staticmethod
+    def p(q: float, n: int) -> float:
+        """ Returns probability when recurrent probability is known.
+
+            Inverse of p().
+
+        Args:
+            q (float): recurrent probability
+            n (int): number of occurrences
+
+        Returns:
+            float: single probability
+        """
+
+        return (1 - (1 - q) ** (1 / n))
+
+
+    def generator_function(self, location: tuple, grid: object, config: object):
+
+        person = Person(location, grid, config)
+
+        for state, locations in self.initializations.items():
             if locations == '*':
                 person.set_state(state)
             else:
                 if location in locations:
                     person.set_state(state)
             # if
-
-        
         # for
 
         return person
@@ -105,6 +136,19 @@ class InfectiousDiseaseModel(object):
 
 
     def run_simple_epidemic(self):
+        """ Create population and runs a simple epidemic
+        """
+
+        # Define parameters. Model parameters are stored in seld.config_model
+        # compute probability of getting disease and store in qr0
+        r0 = self.config_model['r0']
+        n = self.config_model['de'] + self.config_model['di'] # days infected
+        beta = InfectiousDiseaseModel.p(1 - 1 / r0, n)
+        self.config_model['beta'] = beta
+        
+        # Compute daily disease mortality based on alfa
+        alfa = self.config_model['alfa']
+        self.config_model['pm'] = InfectiousDiseaseModel.p(alfa, n)
 
         # Create a grid generator
         generator = GridMatrixGenerator()
@@ -114,9 +158,10 @@ class InfectiousDiseaseModel(object):
             grid_size = (self.rows, self.cols), 
             res_path = self.res_path, 
             icon_style = self.icon_style,
+            config = self.config_model,
             generator_function = self.generator_function,
         )
-        self.initial_seed(grid, 'Y')
+        self.initial_seed(grid, 'I')
 
         grid.create_recorder(Thing.definitions, self.epochs)
     
@@ -136,7 +181,7 @@ class InfectiousDiseaseModel(object):
 
             grid_viewer.update_screen()
             grid.next_turn()
-
+    
         # while
 
         # save all snapshots to file

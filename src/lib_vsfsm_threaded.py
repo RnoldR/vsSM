@@ -1,16 +1,43 @@
 import time
 import numpy as np
 
+from threading import Thread, Lock, Event
+
 # State descriptions
 from lib_vssm import vsM
 
-class vsFSM(vsM):
+class vsFSM(vsM, Thread):
     def __init__(self):
         super(vsFSM, self).__init__()
+
+        self.lock = Lock()
+        self.stopped = Event()
+
+        self.start()
 
         return
     
     ### __init__ ###
+
+
+    def stop(self):
+        self.stopped.set()
+        self.release()
+
+        return
+    
+    ### stop ###
+
+
+    def run(self):
+        self.lock.acquire()
+        while not self.stopped.is_set():
+            self.evaluate()
+            self.lock.acquire()
+
+        return # super().run()
+    
+    ### run ###
     
     
     def add_transition(self,
@@ -20,7 +47,7 @@ class vsFSM(vsM):
                       ):
         
         if state_name not in self.states.keys():
-            raise ValueError(f'State not defined in list of states added: {state_name}')
+            raise ValueError(f'State not added: {state_name}')
         
         # generate unique state name
         i = 1
@@ -65,6 +92,8 @@ class vsFSM(vsM):
                 self.set_current_state(state[transition]['output'])
 
                 break
+
+            # if
 
         # for
 
