@@ -3,6 +3,6 @@ Name;Description;Category;Char;Data
 "E";Exposed;2;"E";
 "I";Infected;3;"I";
 "R";Recovered;4;"R";
-"Dc";Death by Comorbidity;5;"Dc";
+"Dn";Natural Death;5;"Dn";
 "Dd";Death by Disease;6;"Dd";
-"Dn";Natural Death;7;"Dn";
+"Dc";Death by Comorbidity;7;"Dc";
