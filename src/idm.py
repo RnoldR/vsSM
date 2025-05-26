@@ -30,7 +30,7 @@ class InfectiousDiseaseModel(object):
 
         self.config_screen = config['Screen']
         self.config_pop = config['Population']
-        self.config_model = config['Model']
+        self.config_model = config['Infectionmodel']
 
         self.res_path = res_path
         self.screen_width = self.config_screen['screen_width']
@@ -39,13 +39,12 @@ class InfectiousDiseaseModel(object):
         self.cols = self.config_screen['cols']
         self.icon_style = self.config_screen['icon_style']
         self.epochs = self.config_screen['epochs']
-        # self.states = self.config_screen['states']
-        # self.infection_config = config['infection']
-        
+
+        self.initializations = self.config_model['initialization']
+        # self.states = self.config_model['states']
 
         # read Thing definition file
-        Thing.set_definitions(res_path, self.icon_style)    @staticmethod
-
+        Thing.set_definitions(res_path, self.icon_style)  
 
         # create directory to save results to
         now = datetime.now()
@@ -57,26 +56,6 @@ class InfectiousDiseaseModel(object):
         return
     
     ### __init__###
-
-
-    def generator_function(self, location: tuple, grid: object):
-
-        person = Person(location, grid, self.infection_config)
-
-        for state, locations in self.states.items():
-            if locations == '*':
-                person.set_state(state)
-            else:
-                if location in locations:
-                    person.set_state(state)
-            # if
-
-        
-        # for
-
-        return person
-
-    ### generator_function ###
 
 
     @staticmethod
@@ -109,6 +88,24 @@ class InfectiousDiseaseModel(object):
         """
 
         return (1 - (1 - q) ** (1 / n))
+
+
+    def generator_function(self, location: tuple, grid: object, config: object):
+
+        person = Person(location, grid, config)
+
+        for state, locations in self.initializations.items():
+            if locations == '*':
+                person.set_state(state)
+            else:
+                if location in locations:
+                    person.set_state(state)
+            # if
+        # for
+
+        return person
+
+    ### generator_function ###
 
 
     def initial_seed(self, grid: object, state: str):
@@ -144,12 +141,15 @@ class InfectiousDiseaseModel(object):
 
         # Define parameters. Model parameters are stored in seld.config_model
         # compute probability of getting disease and store in qr0
-        r0 = self.model_config['r0']
-        di = self.modfel_config['di'] # days infected
-        self.model_config['qr0'] = InfectiousDiseaseModel(1 - 1 / r0, di)
+        r0 = self.config_model['r0']
+        n = self.config_model['de'] + self.config_model['di'] # days infected
+        beta = InfectiousDiseaseModel.p(1 - 1 / r0, n)
+        self.config_model['beta'] = beta
+        
+        # Compute daily disease mortality based on alfa
+        alfa = self.config_model['alfa']
+        self.config_model['pm'] = InfectiousDiseaseModel.p(alfa, n)
 
-        
-        
         # Create a grid generator
         generator = GridMatrixGenerator()
 
@@ -158,9 +158,10 @@ class InfectiousDiseaseModel(object):
             grid_size = (self.rows, self.cols), 
             res_path = self.res_path, 
             icon_style = self.icon_style,
+            config = self.config_model,
             generator_function = self.generator_function,
         )
-        self.initial_seed(grid, 'Y')
+        self.initial_seed(grid, 'I')
 
         grid.create_recorder(Thing.definitions, self.epochs)
     
@@ -180,7 +181,7 @@ class InfectiousDiseaseModel(object):
 
             grid_viewer.update_screen()
             grid.next_turn()
-grid
+    
         # while
 
         # save all snapshots to file

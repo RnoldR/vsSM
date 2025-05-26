@@ -10,21 +10,14 @@ Population:
   size: Model # Population sizew equals matrix size
   
 Infectionmodel:
-  states:
-      X: S
-      E: E
-      Y: I
-      Z: R
-      D: D
-      M: M
-initialization:
-    X: "*"
-seed: 42
-a: 0 # birth probability
-b: 0.0011 # yearly mortality probability
-alfa: 0.0010 # yearly mortality probability due to illness
-r0: 10 # number of people infected by one peson during illness
-de: 5 # number of days being infectious without symptoms
-di: 20 # number of days bein ill
-dri: 365 # number of days the immunity lasts
-p_mortality: 0.02
+  states: ['S', 'E', 'I', 'R', 'D', 'M']
+  initialization:
+      S: "*"
+  seed: 42
+  a: 0 # birth probability
+  b: 0.0011 # yearly mortality probability
+  alfa: 0.02 # yearly mortality probability due to illness
+  r0: 10 # number of people infected by one peson during illness
+  de: 5 # number of days being infectious without symptoms
+  di: 20 # number of days being ill
+  dr: 400 # number of days the immunity lasts

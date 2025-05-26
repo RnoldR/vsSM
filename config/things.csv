@@ -1,6 +1,6 @@
 Name;Description;Category;Char;Data
-"X";Susceptible;1;"X";
-"I";Infected;2;"I";
-"Y";Contagious;3;"Y";
-"Z";Immune;4;"Z";
-"M";Dead;5;"M";
+"S";Susceptible;1;"S";
+"E";Exposed;2;"E";
+"I";Infected;3;"I";
+"R";Recovered;4;"R";
+"D";Dead;5;"D";
