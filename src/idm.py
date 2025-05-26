@@ -165,11 +165,12 @@ class InfectiousDiseaseModel(object):
                 b = 0
 
             # if
-            # Set b to recurrent probability for days / year
-            self.config_model['b'] = InfectiousDiseaseModel.recurrent_p(b, 365)
-
         # if
 
+        # Set b to recurrent probability for days / year
+        b = InfectiousDiseaseModel.recurrent_p(b, 365)
+        self.config_model['b'] = b
+        
         # Compute daily disease mortality based on alfa
         alfa = self.config_model['alfa']
         self.config_model['pd'] = InfectiousDiseaseModel.recurrent_p(alfa, ni)
