@@ -59,8 +59,23 @@ class InfectiousDiseaseModel(object):
 
 
     @staticmethod
-    def q(p: float, n: int) -> float:
-        """ Defines recurrent probability after n occurrences
+    def recurrent_p(p: float, n: int) -> float:
+        """ Returns recurrent probability.
+
+        Args:
+            q (float): recurrent probability
+            n (int): number of occurrences
+
+        Returns:
+            float: single probability
+        """
+
+        return (1 - (1 - p) ** (1 / n))
+
+    ### recurrent_p ###
+    @staticmethod
+    def inverse_p(p: float, n: int) -> float:
+        """ Computes the inverse of recurrent probability.
 
         Args:
             p (float): probability
@@ -71,23 +86,6 @@ class InfectiousDiseaseModel(object):
         """
 
         return 1 - (1 - p) ** n
-
-
-    @staticmethod
-    def p(q: float, n: int) -> float:
-        """ Returns probability when recurrent probability is known.
-
-            Inverse of p().
-
-        Args:
-            q (float): recurrent probability
-            n (int): number of occurrences
-
-        Returns:
-            float: single probability
-        """
-
-        return (1 - (1 - q) ** (1 / n))
 
 
     def generator_function(self, location: tuple, grid: object, config: object):
@@ -114,7 +112,7 @@ class InfectiousDiseaseModel(object):
         seed = [(mid_row, mid_col)]
 
         for location in seed:
-            grid.matrix[location].set_state(state)        
+            grid.matrix[location].set_state(state)
 
         return
     
@@ -136,19 +134,50 @@ class InfectiousDiseaseModel(object):
 
 
     def run_simple_epidemic(self):
-        """ Create population and runs a simple epidemic
+        """ Create population and run a simple epidemic.
         """
-
         # Define parameters. Model parameters are stored in seld.config_model
         # compute probability of getting disease and store in qr0
         r0 = self.config_model['r0']
-        n = self.config_model['de'] + self.config_model['di'] # days infected
-        beta = InfectiousDiseaseModel.p(1 - 1 / r0, n)
+        ne = self.config_model['de']
+        ni = self.config_model['di'] # days infected
+        n = ne + ni
+        beta = InfectiousDiseaseModel.recurrent_p(1 - 1 / r0, n)
         self.config_model['beta'] = beta
+
+        # set the natural death parameter
+        b = self.config_model['b']
+        if b < 0:
+            real_pop = self.config_pop['real']
+            if 'population_size' in real_pop.keys() and \
+               'natural_death' in real_pop.keys():
+                
+                pop_size = real_pop['population_size']
+                pop_death = real_pop['natural_death']
+
+                if pop_size > 0:
+                    b = pop_death / pop_size
+                else:
+                    b = 0
+                # if
+
+            else:
+                b = 0
+
+            # if
+        # if
+
+        # Set b to recurrent probability for days / year
+        b = InfectiousDiseaseModel.recurrent_p(b, 365)
+        self.config_model['b'] = b
         
         # Compute daily disease mortality based on alfa
         alfa = self.config_model['alfa']
-        self.config_model['pm'] = InfectiousDiseaseModel.p(alfa, n)
+        self.config_model['pd'] = InfectiousDiseaseModel.recurrent_p(alfa, ni)
+
+        # Compute daily disease mortality based on comorbidity
+        c = self.config_model['c']
+        self.config_model['pc'] = InfectiousDiseaseModel.recurrent_p(c, ni)
 
         # Create a grid generator
         generator = GridMatrixGenerator()

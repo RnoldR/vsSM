@@ -111,13 +111,15 @@ class vsFSMMatrix():
         for r in range(ridx - radius, ridx + radius + 1):
             for c in range(cidx - radius, cidx + radius + 1):
                 if 0 <= r < self.rows and 0 <= c < self.cols:
-                    states['Count'] += 1
-                    state = self.matrix[r, c].get_current_state()
-                    if state in states.keys():
-                        states[state] += 1
+                    # do not count one-self
+                    if not (r == ridx and c == cidx):
+                        states['Count'] += 1
+                        state = self.matrix[r, c].get_current_state()
+                        if state in states.keys():
+                            states[state] += 1
 
-                    else:
-                        states[state] = 0
+                        else:
+                            states[state] = 0
 
                     # if
                 # if
