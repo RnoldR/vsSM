@@ -168,8 +168,8 @@ class InfectiousDiseaseModel(object):
         # if
 
         # Set b to recurrent probability for days / year
-        b = InfectiousDiseaseModel.recurrent_p(b, 365)
-        self.config_model['b'] = b
+        pb = InfectiousDiseaseModel.recurrent_p(b, 365)
+        self.config_model['pb'] = pb
         
         # Compute daily disease mortality based on alfa
         alfa = self.config_model['alfa']
@@ -178,6 +178,16 @@ class InfectiousDiseaseModel(object):
         # Compute daily disease mortality based on comorbidity
         c = self.config_model['c']
         self.config_model['pc'] = InfectiousDiseaseModel.recurrent_p(c, ni)
+
+        # Create dictionary of parameters to display
+        pars = {}
+        pars['r0'] = f'{r0:7d}'
+        pars['β'] = f'{beta:7.4f}'
+        pars['Days exposed'] = f'{ne:7d}'
+        pars['Days infected'] = f'{ni:7d}'
+        pars['Natural mort. (b)'] = f'{b:7.4f}'
+        pars['Disease mort. (α)'] = f'{alfa:7.4f}'
+        pars['Comortality (pc)'] = f'{c:7.4f}'
 
         # Create a grid generator
         generator = GridMatrixGenerator()
@@ -201,14 +211,14 @@ class InfectiousDiseaseModel(object):
             screen_size = (self.screen_width, self.screen_height),
         )
         
-        grid_viewer.update_screen()
+        grid_viewer.update_screen(pars)
 
         image_dir = os.path.join(self.result_dir, 'images')
         while grid.ticks <= self.epochs:
             save_file = os.path.join(image_dir, f'model_run_{grid.ticks:04d}.png')
             pygame.image.save(grid_viewer.screen, save_file)
 
-            grid_viewer.update_screen()
+            grid_viewer.update_screen(pars)
             grid.next_turn()
     
         # while

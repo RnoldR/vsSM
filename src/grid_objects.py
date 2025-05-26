@@ -55,7 +55,7 @@ class Person(Thing):
         beta = config['beta'] # Probability to get infected per day
 
         # Different causes of death
-        b = config['b'] # Probability to die from natural causes
+        b = config['pb'] # Probability to die from natural causes
         alfa = config['pd'] # Death by disease
         pc = config['pc'] # Death by comorbidity
 
@@ -64,12 +64,13 @@ class Person(Thing):
         self.states = []
         for x in super().definitions.index:
             self.states.append(x)
+
         self.fsm.add_states(self.states)
 
         # For each state add transitions
         self.fsm.add_transition('S', lambda inputs: prob(1, b), 'Dn')
         self.fsm.add_transition('S', lambda inputs: prob(inputs['Neighbours']['I'], beta), 'E')
-        self.fsm.add_transition('S', lambda inputs: inputs['Neighbours']['I'] == 0, 'S')
+        self.fsm.add_transition('S', lambda inputs: True, 'S') #inputs['Neighbours']['I'] == 0, 'S')
         
         self.fsm.add_transition('E', lambda inputs: prob(1, b), 'Dn')
         self.fsm.add_transition('E', lambda inputs: grid.ticks - inputs['Ticker'] < days_exposure-1, 'E')
@@ -86,8 +87,8 @@ class Person(Thing):
         self.fsm.add_transition('R', lambda inputs: grid.ticks - inputs['Ticker'] >= days_recovered-1, 'S')
 
         self.fsm.add_transition('Dn', lambda inputs: True, 'Dn')
-        self.fsm.add_transition('Dc', lambda inputs: True, 'Dc')
         self.fsm.add_transition('Dd', lambda inputs: True, 'Dd')
+        self.fsm.add_transition('Dc', lambda inputs: True, 'Dc')
 
         # Add input values
         self.fsm.set_input('Row', self.row)
