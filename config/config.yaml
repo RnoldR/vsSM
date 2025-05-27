@@ -68,3 +68,9 @@ Infectionmodel:
 
   # number of days the immunity lasts
   dr: 400
+
+Events:
+  vaccinate:
+    at_day: 0
+    area: (0, 0), (1/4, 1/4)
+    degree: 0.5

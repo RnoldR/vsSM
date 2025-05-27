@@ -31,6 +31,7 @@ class InfectiousDiseaseModel(object):
         self.config_screen = config['Screen']
         self.config_pop = config['Population']
         self.config_model = config['Infectionmodel']
+        self.config_events = config['Events']
 
         self.res_path = res_path
         self.screen_width = self.config_screen['screen_width']

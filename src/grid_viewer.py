@@ -211,9 +211,6 @@ class GridViewMatrix(GridView2D):
             color=pygame.Color('black'),
         ):
         # 2D array where each row is a list of words.
-        # The width of a space.
-        space = font.size(' ')
-
         x_offset = 5
         y_offset = 5
 
@@ -222,6 +219,8 @@ class GridViewMatrix(GridView2D):
         value_width = 0
         max_height = 0
         max_width = 0
+
+        # Compute width and height of the provided texts
         for key, value in dict.items():
             omvang = font.size(key)
             if omvang[0] > max_width: max_width = omvang[0]
@@ -236,6 +235,8 @@ class GridViewMatrix(GridView2D):
         # Plot title
         word_surface = font.render(title, 0, color)
         surface.blit(word_surface, (x + x_offset, y))
+
+        # Plot table
         x1 = int(x + max_width + 0.1 * max_width)
         y1 = int(y + max_height + 0.1 * max_height) + y_offset
         y_total = 0
@@ -251,8 +252,10 @@ class GridViewMatrix(GridView2D):
 
         # for
 
+        # Draw box around table
+        x_total = x1 + value_width + x_offset
         y_total += 2 * y_offset
-        rect = pygame.Rect(x, y + max_height, x1 + value_width + x_offset, y_total)# - 3 * max_height)
+        rect = pygame.Rect(x, y + max_height, x_total, y_total)
         pygame.draw.rect(surface, color, rect, 2)
             
         return
