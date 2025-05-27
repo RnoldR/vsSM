@@ -5,20 +5,20 @@ class Event(object):
         super().__init__()
 
         # set name of the event
-        self.name = str(event.name)
+        self.name = str(event['name'])
 
         # get and check event type
-        event_type = str(event.type).lower().strip()
+        event_type = str(event['type']).lower().strip()
         if event_type not in ['infection', 'vaccination']:
             raise ValueError(f'Event type can only be "infection" or "vaccination"')
         
         self.type = event_type
 
         # get event time, should be integer
-        self.time = int(event.time)
+        self.time = int(event['time'])
 
         # get and convert the event coordinates
-        loc = event.location
+        loc = event['location']
         if self.type == 'infection':
             # only one location present (row, col)
             r = convert_coord(str(loc[0]), rows)
@@ -26,7 +26,7 @@ class Event(object):
 
             self.location = (r, c)
 
-            self.value = event.value
+            self.value = event['value']
 
         elif self.type == 'vaccination':
             # location should be rectangle of format: ((rul, cul), (rll, cll))
@@ -37,7 +37,7 @@ class Event(object):
             
             self.location = ((rul, cul), (rll, cll))
     
-            self.value = float(event.value)
+            self.value = float(event['value'])
 
         else:
             pass # should be error but that has already been checked
@@ -80,12 +80,20 @@ class Events(object):
     ### insert_event ###
 
 
-    def has_event(self, time: int):
+    def has_events(self, time: int):
         if time in self.calender.keys():
             return True
 
         return False
     
     ### has_event ###
+
+
+    def get_events(self, day: int):
+        if self.has_events(day):
+            return self.calender[day]
+        
+        else:
+            return []
 
 ### Class: Events ###

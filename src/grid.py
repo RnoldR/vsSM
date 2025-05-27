@@ -248,6 +248,7 @@ class Grid(object):
         
 ## Class: Grid ##
 
+
 class GridMatrix(Grid):
     """ Represents a 2-dimensional grid. Can be populated by GridThing objects.
     """
@@ -328,7 +329,9 @@ class GridMatrix(Grid):
 
     ### save_grid ###
 
-    
+
+    def load_grid(self, file_path: str):
+
         if not isinstance(file_path, str):
             logging.critical("Invalid file_path. It must be a string: " + file_path)
             return None
@@ -435,6 +438,13 @@ class GridMatrix(Grid):
         self.things_to_be_added_at_end_of_turn.append((ThingClass, loc))
     
     ### add_thing ###
+
+
+    def get_thing(self, loc):
+
+        return self.matrix[loc]
+    
+    ### get_thing ###
 
 
     def list_things(self):

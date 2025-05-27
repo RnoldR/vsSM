@@ -35,6 +35,18 @@ def convert_coord(coord: str, max: int) -> int:
 ### convert_coord ###
 
 
+def prob(nb: int, prb: float):
+    if nb > 0:
+        result = random.random() < prb
+
+    else:
+        result = False
+
+    return result
+
+### prob ###
+
+
 def recurrent_p(p: float, n: int) -> float:
     """ Returns recurrent probability.
 

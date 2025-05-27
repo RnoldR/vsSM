@@ -19,17 +19,18 @@ from grid_objects import Person
 
 from idm_events import Event, Events
 
-from idm_utils import recurrent_p
+from idm_utils import recurrent_p, prob
 
 from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
     COL_CHAR, COL_DATA, COL_ICON, COL_COLOR
 
 
 class InfectiousDiseaseModel(object):
-    def __init__(self, res_path: str):
+    def __init__(self, res_path: str, config_file: str):
 
         # read config file and assign to instance variables
-        with open(os.path.join(res_path, 'config', 'config.yaml')) as infile:
+        filename = os.path.join(res_path, 'config', config_file)
+        with open(filename) as infile:
             config = yaml.safe_load(infile)
 
         self.config_screen = config['Screen']
@@ -50,10 +51,15 @@ class InfectiousDiseaseModel(object):
         self.initializations = self.config_model['initialization']
 
         # Setup events
-        self.events = Events(self.config_events)
+        self.events = Events(
+            config = self.config_events, 
+            rows = self.config_screen['rows'], 
+            cols = self.config_screen['cols'],
+        )
 
         # read Thing definition file
         Thing.set_definitions(res_path, self.icon_style)  
+        self.states = [x for x in Thing.definitions.index]
 
         # create directory to save results to
         now = datetime.now()
@@ -112,16 +118,56 @@ class InfectiousDiseaseModel(object):
     ### generate_movie ###
 
 
-    def event_infect(self, event):
+    def event_infect(self, grid, event: Event):
         loc = event.location
         state = event.value
 
         if state not in self.states:
-            raise ValueError(f'Event infection value shoiuld be in {self.states}')
+            raise ValueError(f'Event infection value should be in {self.states}')
+        
+        person = grid.get_thing(loc)
+        person.set_state(state)
 
         return
     
     ### event_infect ###
+
+
+    def event_vaccinate(self, grid, event: Event):
+        ul = event.location[0]
+        lr = event.location[1]
+        vaccination_prob = event.value
+        vaccinated = 'R'
+
+        for row in range(ul[0], lr[0]):
+            for col in range (ul[1], lr[1]):
+                if prob(1, vaccination_prob):
+                    person = grid.get_thing((row, col))
+                    person.set_state(vaccinated)
+                # if
+            # for
+        # for
+
+        return
+    
+    ### event_vaccinate ###
+
+
+    def process_events(self, day: int, grid, events: Events):
+        for event in events.get_events(day):
+            if event.type == 'infection':
+                self.event_infect(grid, event)
+            
+            elif  event.type == 'vaccination':
+                self.event_vaccinate(grid, event)
+
+            # if
+
+        # for
+
+        return
+
+    ### process_events ###
 
 
     def run_simple_epidemic(self):
@@ -209,6 +255,7 @@ class InfectiousDiseaseModel(object):
             save_file = os.path.join(image_dir, f'model_run_{grid.ticks:04d}.png')
             pygame.image.save(grid_viewer.screen, save_file)
 
+            self.process_events(grid.ticks, grid, self.events)
             grid_viewer.update_screen(pars)
             grid.next_turn()
     
