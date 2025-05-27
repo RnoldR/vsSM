@@ -5,6 +5,8 @@ logger = logging.getLogger()
 import random
 import numpy as np
 
+from idm_utils import prob
+
 from grid import Grid
 from grid_thing import Thing
 
@@ -20,19 +22,6 @@ from lib_vsfsm import vsFSM
 # rho = 0.1 # virulence
 # pm = 0.02 / contagious_time
 # pz = 1 - pm
-
-
-def prob(nb: int, prb: float):
-    if nb > 0:
-        result = random.random() < prb
-
-    else:
-        result = False
-
-    # print(nb, prb, result)
-
-    return result
-### prob ###
 
 
 class Person(Thing):

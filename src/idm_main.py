@@ -8,5 +8,5 @@ res_path = '/media/i-files/home/arnold/development/python/vsSM'
 logfile = os.path.join(res_path, 'results', 'idm.log')
 logger = create_logger.create_log(logfile)
 
-idm = InfectiousDiseaseModel(res_path)
+idm = InfectiousDiseaseModel(res_path, 'partial-vaccination.config')
 idm.run_simple_epidemic()
