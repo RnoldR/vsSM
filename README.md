@@ -1,4 +1,4 @@
-<h1>Very simple deterministic Finite State Machine (vsFSM) with two implementations</h1>hj1>
+<h1>Very simple deterministic Finite State Machine (vsFSM) with two implementations</h1>
 
 Two test environments are built on this vsFSM:
 
