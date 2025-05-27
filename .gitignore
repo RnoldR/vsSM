@@ -167,3 +167,4 @@ cython_debug/
 .vscode/launch.json
 logfile.txt
 src/clip.py
+.~lock*
