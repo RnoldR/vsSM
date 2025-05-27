@@ -326,7 +326,9 @@ class GridMatrix(Grid):
 
         # if
 
-    ### save_grid ###print(
+    ### save_grid ###
+
+    
         if not isinstance(file_path, str):
             logging.critical("Invalid file_path. It must be a string: " + file_path)
             return None

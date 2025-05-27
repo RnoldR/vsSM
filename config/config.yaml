@@ -4,8 +4,7 @@ Screen:
   rows: 100 # Rows and cols of matrix
   cols: 100
   icon_style: 1 # Which style of icons to use
-  epochs: 365 # number of days to run the simulation
-
+  
 # Real population figures are used to compute some parameters in the model
 # like natural death, birth and so on. 
 # Model specifications are used to override the real population figures
@@ -31,7 +30,10 @@ Infectionmodel:
     - 'Dd' # Dead because of disease
     - 'Dc' # Cormortality: dead because of underlying conditions (comorbidity)
 
-  # Initialize cells to states: * means all cells
+  # number of days to run the simulation
+  epochs: 365
+
+# Initialize cells to states: * means all cells
   initialization:
       S: "*"
 
@@ -70,7 +72,26 @@ Infectionmodel:
   dr: 400
 
 Events:
+  infect-center:
+    type: infection
+    time: 0
+    location: (1/2, 1/2)
+    value: Y
+
+  infect-random:
+    type: infection
+    time: 0
+    location: (r, r)
+    value: Y
+
+  infect-left:
+    type: infection
+    time: 0
+    location: (1/4, 5)
+    value: Y
+
   vaccinate:
-    at_day: 0
-    area: (0, 0), (1/4, 1/4)
-    degree: 0.5
+    type: vaccination
+    time: 10
+    location: (0, 0), (1/4, 1/4)
+    value: 0.5

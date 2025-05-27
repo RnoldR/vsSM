@@ -17,6 +17,10 @@ from grid_generators import GridMatrixGenerator
 from grid_thing import Thing
 from grid_objects import Person
 
+from idm_events import Event, Events
+
+from idm_utils import recurrent_p
+
 from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
     COL_CHAR, COL_DATA, COL_ICON, COL_COLOR
 
@@ -33,16 +37,20 @@ class InfectiousDiseaseModel(object):
         self.config_model = config['Infectionmodel']
         self.config_events = config['Events']
 
+        # Read screen parameters
         self.res_path = res_path
         self.screen_width = self.config_screen['screen_width']
         self.screen_height = self.config_screen['screen_height']
         self.rows = self.config_screen['rows']
         self.cols = self.config_screen['cols']
         self.icon_style = self.config_screen['icon_style']
-        self.epochs = self.config_screen['epochs']
 
+        # Get model parameters
+        self.epochs = self.config_model['epochs']
         self.initializations = self.config_model['initialization']
-        # self.states = self.config_model['states']
+
+        # Setup events
+        self.events = Events(self.config_events)
 
         # read Thing definition file
         Thing.set_definitions(res_path, self.icon_style)  
@@ -57,36 +65,6 @@ class InfectiousDiseaseModel(object):
         return
     
     ### __init__###
-
-
-    @staticmethod
-    def recurrent_p(p: float, n: int) -> float:
-        """ Returns recurrent probability.
-
-        Args:
-            q (float): recurrent probability
-            n (int): number of occurrences
-
-        Returns:
-            float: single probability
-        """
-
-        return (1 - (1 - p) ** (1 / n))
-
-    ### recurrent_p ###
-    @staticmethod
-    def inverse_p(p: float, n: int) -> float:
-        """ Computes the inverse of recurrent probability.
-
-        Args:
-            p (float): probability
-            n (int): number of occurrences
-
-        Returns:
-            float: probability after n occurrences
-        """
-
-        return 1 - (1 - p) ** n
 
 
     def generator_function(self, location: tuple, grid: object, config: object):
@@ -134,6 +112,18 @@ class InfectiousDiseaseModel(object):
     ### generate_movie ###
 
 
+    def event_infect(self, event):
+        loc = event.location
+        state = event.value
+
+        if state not in self.states:
+            raise ValueError(f'Event infection value shoiuld be in {self.states}')
+
+        return
+    
+    ### event_infect ###
+
+
     def run_simple_epidemic(self):
         """ Create population and run a simple epidemic.
         """
@@ -143,7 +133,7 @@ class InfectiousDiseaseModel(object):
         ne = self.config_model['de']
         ni = self.config_model['di'] # days infected
         n = ne + ni
-        beta = InfectiousDiseaseModel.recurrent_p(1 - 1 / r0, n)
+        beta = recurrent_p(1 - 1 / r0, n)
         self.config_model['beta'] = beta
 
         # set the natural death parameter
@@ -169,16 +159,16 @@ class InfectiousDiseaseModel(object):
         # if
 
         # Set b to recurrent probability for days / year
-        pb = InfectiousDiseaseModel.recurrent_p(b, 365)
+        pb = recurrent_p(b, 365)
         self.config_model['pb'] = pb
         
         # Compute daily disease mortality based on alfa
         alfa = self.config_model['alfa']
-        self.config_model['pd'] = InfectiousDiseaseModel.recurrent_p(alfa, ni)
+        self.config_model['pd'] = recurrent_p(alfa, ni)
 
         # Compute daily disease mortality based on comorbidity
         c = self.config_model['c']
-        self.config_model['pc'] = InfectiousDiseaseModel.recurrent_p(c, ni)
+        self.config_model['pc'] = recurrent_p(c, ni)
 
         # Create dictionary of parameters to display
         pars = {}
