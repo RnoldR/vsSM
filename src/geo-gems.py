@@ -6,50 +6,54 @@ import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
 
-file_path = '/media/i-files/data/geo_nl_cbs/provincies/GRS_1000_PROV_NL_V.shp'
-gdf_prov = gpd.read_file(file_path)
+geo_pkg = '/media/i-files/data/geo_nl_cbs/gebieden-gpkg/cbsgebiedsindelingen2022.gpkg'
+geo_gems = gpd.read_file(geo_pkg, layer = 'cbs_gemeente_2022_gegeneraliseerd')
 
-print(type(gdf_prov))
-print(gdf_prov.columns)
-print(gdf_prov['PROVINCIEN'])
-print(gdf_prov)
+print(type(geo_gems))
+print(geo_gems.columns)
+print(geo_gems['statnaam'])
+print(geo_gems)
 
-gdf_prov['area'] = gdf_prov.area
-print(gdf_prov.head())
+geo_gems['area'] = geo_gems.area
+print(geo_gems.head())
 
-print(gdf_prov.crs)
+print(geo_gems.crs)
 
 fig, ax = plt.subplots(figsize=(8,8))
 
-gdf_prov.plot(ax=ax, facecolor='none', edgecolor='gray')
+geo_gems.plot(ax=ax, facecolor='none', edgecolor='gray')
 # plt.show()
 
-file_path = 'data/inkomen-per-provincie.csv'
+file_path = 'data/kvk2020-wb2023.csv'
 df_inkomen = pd.read_csv(file_path, sep=';')
+df_inkomen = df_inkomen.loc[df_inkomen['Wijkcode'] == 'Totaal']
+print(df_inkomen.shape)
 
-print(df_inkomen)
+selectie_col = 'Gemiddeld persoonlijk inkomen'
+df_inkomen.loc[:,selectie_col] = 1000 * df_inkomen.loc[:,selectie_col]
+print(df_inkomen.head())
 
-gdf_prov = pd.merge(gdf_prov, df_inkomen, left_on='PROVINCIEN', right_on='Provincie', how='left')
+geo_gems = pd.merge(geo_gems, df_inkomen, 
+                    left_on='statnaam', 
+                    right_on='Regionaam', 
+                    how='left',
+                   )
 
-print(type(gdf_prov))
-print(gdf_prov)
+print(geo_gems)
 
 fig, ax = plt.subplots(figsize=(8,8))
 
-column = 'Gemiddeld bruto huishoudensinkomen'
-gdf_prov.plot(ax=ax, edgecolor='gray', column=column, legend=True);
-# plt.show()
-
-column = 'Gemiddeld bruto huishoudensinkomen'
+geo_gems.plot(ax=ax, edgecolor='gray', column=selectie_col, legend=True);
+plt.show()
 
 fig, ax = plt.subplots(figsize=(8,8))
 
-gdf_prov.plot(column=column, scheme='Quantiles', k=5, edgecolor='gray', 
+geo_gems.plot(column=selectie_col, scheme='Quantiles', k=5, edgecolor='gray', 
               cmap='Blues', legend=True, ax=ax);
 
 # plt.show()
 
-gdf_prov_choro = gdf_prov.copy()
+gdf_prov_choro = geo_gems.copy()
 
 gdf_prov_choro['geoid'] = gdf_prov_choro.index.astype(str)
 gdf_prov_choro = gdf_prov_choro[['geoid', 'Gemiddeld bruto huishoudensinkomen', 
