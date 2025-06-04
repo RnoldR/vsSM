@@ -6,18 +6,19 @@ import os
 import time
 import yaml
 import pygame
+import shapely
 import pandas as pd
+import geopandas as gpd
 import matplotlib.pyplot as plt
-import moviepy.video.io.ImageSequenceClip
+# import moviepy.video.io.ImageSequenceClip
 
+from itertools import chain
 from datetime import datetime
 
 from grid_viewer import GridViewMatrix
 from grid_generators import GridMatrixGenerator
 from grid_thing import Thing
 from grid_objects import Person
-
-from idm_events import Event, Events
 
 from idm_utils import recurrent_p, prob
 
@@ -26,7 +27,8 @@ from grid_thing_data import COL_NAME, COL_DESCRIPTION, COL_CATEGORY, \
 
 
 class GeoGems(object):
-    def __init__(self, res_path: str, config_file: str):
+    def __init__(self, res_path: str, config_file: str, geo_pad: str):
+        super().__init__()
 
         # read config file and assign to instance variables
         filename = os.path.join(res_path, 'config', config_file)
@@ -36,10 +38,10 @@ class GeoGems(object):
         self.config_screen = config['Screen']
         self.config_pop = config['Population']
         self.config_model = config['Infectionmodel']
-        self.config_events = config['Events']
 
         # Read screen parameters
         self.res_path = res_path
+        self.geo_pad = geo_pad
         self.screen_width = self.config_screen['screen_width']
         self.screen_height = self.config_screen['screen_height']
         self.rows = self.config_screen['rows']
@@ -49,13 +51,6 @@ class GeoGems(object):
         # Get model parameters
         self.epochs = self.config_model['epochs']
         self.initializations = self.config_model['initialization']
-
-        # Setup events
-        self.events = Events(
-            config = self.config_events, 
-            rows = self.config_screen['rows'], 
-            cols = self.config_screen['cols'],
-        )
 
         # read Thing definition file
         Thing.set_definitions(res_path, self.icon_style)  
@@ -104,70 +99,80 @@ class GeoGems(object):
     ### initial_seed ###
 
 
-    def generate_movie(self, image_dir, video_file, fps = 25):
-        image_files = [os.path.join(image_dir, img)
-                    for img in os.listdir(image_dir)
-                    if img.endswith(".png")]
-        image_files.sort()
+    def get_borders(self, pad: str):
+        def transformation(x):
+            x[:,0] = self.cols * (x[:,0] - lrx) / xrange
+            x[:,1] = self.rows * (x[:,1] - lry) / yrange
 
-        clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(image_files, fps = fps)
-        clip.write_videofile(video_file, codec = 'png')
-
-        return
-    
-    ### generate_movie ###
-
-
-    def event_infect(self, grid, event: Event):
-        loc = event.location
-        state = event.value
-
-        if state not in self.states:
-            raise ValueError(f'Event infection value should be in {self.states}')
+            return x
         
-        person = grid.get_thing(loc)
-        person.set_state(state)
+        def to_coords(multipolygon):
+            for polygon in list(multipolygon.geoms):
+                yield from polygon.exterior.coords[:-1]
+                yield from chain.from_iterable(interior.coords[:-1] for interior in polygon.interiors)
 
-        return
+
+        
+        df = gpd.read_file(pad, layer = 'cbs_gemeente_2022_gegeneraliseerd')
+        df.insert(len(df.columns) - 1, 'geom', None)
+        print(df.columns)
+        df['geom'] = df['geometry']
+        bounds = df.total_bounds
+        lrx = bounds[0]
+        lry = bounds[1]
+        ulx = bounds[2]
+        uly = bounds[3]
+        xrange = ulx - lrx
+        yrange = uly - lry
+ 
+        print('\nx:', lrx, lry, xrange)
+        print('y:', ulx, uly,yrange)
+
+
+        # df['geometry'] = shapely.transform(df['geometry'], transformation)
+        df['geometry'] = shapely.transform(df['geom'], transformation)
+        pp = []
+        for idx, multi_polygon in df['geometry'].items():
+            # print('***********')
+            # print(type(poly))
+            # print(poly.shape)
+
+            # methods 1
+            poly_list = list(to_coords(multi_polygon))
+            df.at[idx, 'geometry'] = [poly_list]
+
+            # method 2
+            # poly_mapped = shapely.geometry.mapping(poly)
+            # poly_coordinates = poly_mapped['coordinates'][0]
+            # poly_list = [(coords[0], coords[1]) for coords in poly_coordinates]
+
+            # print(poly_list[:10])
+
+            # pp.append(poly_list)
+
+        
+
+
+        fig, ax = plt.subplots(figsize=(8,8))
+
+        df.plot(ax=ax, facecolor='none', edgecolor='blue')
+        plt.show()
+
+
+        # bounds = df.total_bounds
+        # lrx = bounds[0]
+        # lry = bounds[1]
+        # ulx = bounds[2]
+        # uly = bounds[3]
+        # xrange = ulx - lrx
+        # yrange = uly - lry
+ 
+        # print('\nx:', lrx, lry, xrange)
+        # print('y:', ulx, uly,yrange)
+
+        return pp
     
-    ### event_infect ###
-
-
-    def event_vaccinate(self, grid, event: Event):
-        ul = event.location[0]
-        lr = event.location[1]
-        vaccination_prob = event.value
-        vaccinated = 'R'
-
-        for row in range(ul[0], lr[0]):
-            for col in range (ul[1], lr[1]):
-                if prob(1, vaccination_prob):
-                    person = grid.get_thing((row, col))
-                    person.set_state(vaccinated)
-                # if
-            # for
-        # for
-
-        return
-    
-    ### event_vaccinate ###
-
-
-    def process_events(self, day: int, grid, events: Events):
-        for event in events.get_events(day):
-            if event.type == 'infection':
-                self.event_infect(grid, event)
-            
-            elif  event.type == 'vaccination':
-                self.event_vaccinate(grid, event)
-
-            # if
-
-        # for
-
-        return
-
-    ### process_events ###
+    ### get_borders ###
 
 
     def run_simple_epidemic(self):
@@ -247,29 +252,24 @@ class GeoGems(object):
             definitions = Thing.definitions, 
             screen_size = (self.screen_width, self.screen_height),
         )
-        
+
         grid_viewer.update_screen(pars)
+
+        borders = self.get_borders(self.geo_pad)
+        print(type(borders))
+        for polygon in borders:
+            grid_viewer.test_polygon(polygon)
 
         image_dir = os.path.join(self.result_dir, 'images')
         while grid.ticks <= self.epochs:
-            save_file = os.path.join(image_dir, f'model_run_{grid.ticks:04d}.png')
-            pygame.image.save(grid_viewer.screen, save_file)
+            input('Next')
+            # save_file = os.path.join(image_dir, f'model_run_{grid.ticks:04d}.png')
+            # pygame.image.save(grid_viewer.screen, save_file)
 
-            self.process_events(grid.ticks, grid, self.events)
             grid_viewer.update_screen(pars)
             grid.next_turn()
     
         # while
-
-        # save all snapshots to file
-        grid.recorder.to_csv(os.path.join(self.result_dir, 'model_output.csv'), sep=';')
-        
-        # create a movie from the saved images
-        movie_file = os.path.join(self.result_dir, 'model-epidemic.avi')
-        self.generate_movie(image_dir, movie_file)
-
-        # plot the snapshots
-        self.plot(grid.recorder, grid_viewer.definitions)
 
         # input('Press <enter> to quit')
         pygame.quit()
@@ -296,3 +296,15 @@ class GeoGems(object):
 
 ### Class: InfectiousDiseaseModel ###
 
+
+# import logging
+from create_logger import create_logger
+
+res_path = '/media/i-files/home/arnold/development/python/vsSM'
+logfile = os.path.join(res_path, 'geo-transform.log')
+logger = create_logger.create_log(logfile)
+geo_pkg = '/media/i-files/data/geo_nl_cbs/gebieden-gpkg/cbsgebiedsindelingen2022.gpkg'
+
+gg = GeoGems(res_path, 'partial-vaccination.config', geo_pkg)
+gg.get_borders(geo_pkg)
+gg.run_simple_epidemic()

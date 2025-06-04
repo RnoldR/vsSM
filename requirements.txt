@@ -1,8 +1,10 @@
-numpy
-pandas
-pyyaml
-bitstring
+geopandas
 matplotlib
-tensorflow
 scikit-learn
+pyyaml
+moviepy
+bitstring
 pygame
+mapclassify
+folium
+

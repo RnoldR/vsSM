@@ -119,6 +119,15 @@ class GridViewMatrix(GridView2D):
     
     # compute_screen_size #
 
+
+    def test_polygon(self, poly):
+
+        pygame.draw.polygon(self.grid_layer, (0, 0, 0), poly, 2)
+        
+        return
+    
+    ### test_polygon
+
     
     def get_events(self):
         #self.direction = "X" # Equals to don't move
